@@ -16,7 +16,7 @@ def create_conversation(conversation_data: ConversationCreate, session: Session 
 
 
 @router.get('/{inbox_id}')
-def read_conversation(inbox_id: int, session: Session = Depends(get_session)):
+def read_conversation(inbox_id: int, page: int, session: Session = Depends(get_session)):
     conversation_repository = ConversationRepository(session)
-    conversation = conversation_repository.read_conversation(inbox_id)
+    conversation = conversation_repository.read_conversation(inbox_id, page)
     return conversation

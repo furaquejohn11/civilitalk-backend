@@ -1,7 +1,8 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select, col
 from schemas.conversation_schema import ConversationCreate
 from models import Conversation
 from .ml_repository import MLRepository
+from fastapi import FastAPI, WebSocket
 
 
 class ConversationRepository:
@@ -27,9 +28,16 @@ class ConversationRepository:
 
         return conversation
 
-    def read_conversation(self, inbox_id: int) -> list[Conversation]:
-        conversation = self.session.exec(
-            select(Conversation).where(Conversation.inbox_id == inbox_id)).all()
+    def read_conversation(self, inbox_id: int, page: int, page_size: int = 10) -> list[Conversation]:
+        offset = (page - 1) * page_size
 
-        return list(conversation)
+        conversation = (self.session.exec(
+            select(Conversation)
+            .where(Conversation.inbox_id == inbox_id)
+            .offset(offset)
+            .limit(page_size)
+            .order_by(col(Conversation.created_at).desc())
+            ).all())
+
+        return list(reversed(conversation))
 

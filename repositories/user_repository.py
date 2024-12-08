@@ -32,7 +32,7 @@ class UserRepository:
         self.session.refresh(user)
         return user
 
-    def login_user(self, user_data: UserLogin) -> User:
+    def login_user(self, user_data: UserLogin) -> UserRead:
         user = self.session.exec(select(User).where(User.username == user_data.username)).first()
 
         if not user or not verify_password(user_data.password, user.hashed_password):
@@ -40,10 +40,34 @@ class UserRepository:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid username or password"
             )
-        return user
+        user_read = UserRead(
+            id=user.id,
+            username=user.username,
+            firstname=user.firstname,
+            lastname=user.lastname
+        )
+
+        return user_read
 
     def get_user(self, username: str,) -> UserRead:
         user = self.session.exec(select(User).where(User.username == username)).first()
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User not found"
+            )
+        user_read = UserRead(
+            firstname=user.firstname,
+            lastname=user.lastname,
+            username=user.username,
+            id=user.id
+        )
+
+        return user_read
+
+    def get_user_id(self, user_id: int) -> UserRead:
+        user = self.session.exec(select(User).where(User.id == user_id)).first()
 
         if not user:
             raise HTTPException(

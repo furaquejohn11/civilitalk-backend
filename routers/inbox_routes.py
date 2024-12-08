@@ -16,9 +16,16 @@ def create_inbox(inbox_data: InboxCreate, session: Session = Depends(get_session
     return inbox
 
 
-@router.get('/{user_id}')
+@router.get('/inbox/{user_id}')
 def get_user_inbox(user_id: int, session: Session = Depends(get_session)):
     inbox_repository = InboxRepository(session)
     user_inbox = inbox_repository.get_user_inbox(user_id)
     return user_inbox
+
+
+@router.get('/user')
+def get_inbox_preview(user_id: int, session: Session = Depends(get_session)):
+    inbox_repository = InboxRepository(session)
+    inbox_preview = inbox_repository.inbox_preview(user_id)
+    return inbox_preview
 

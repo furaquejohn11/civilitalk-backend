@@ -41,3 +41,13 @@ class ConversationRepository:
 
         return list(reversed(conversation))
 
+    def latest_conversation(self, inbox_id: int) -> tuple:
+        conversation = (self.session.exec(
+            select(Conversation.sender_id, Conversation.text, Conversation.created_at)
+            .where(Conversation.inbox_id == inbox_id)
+            .order_by(col(Conversation.created_at).desc())
+            .limit(1)
+        )).first()
+
+        return conversation
+

@@ -1,4 +1,5 @@
 import joblib
+import re
 
 
 class MLRepository:
@@ -6,26 +7,33 @@ class MLRepository:
         self._model = joblib.load('ml/model_none_30k.pkl')
         self._vector = joblib.load('ml/vectorizer_30k.pkl')
 
-    def censor_profane_words(self, text):
-        words = text.split()
-        censored_words = []
+    def censor_profane_words(self, text, whitelist=None):
+        if whitelist is None:
+            whitelist = set()  # Default to an empty whitelist
 
-        for word in words:
-            # Check if the word makes the text profane when removed
-            modified_text = text.replace(word, '')
-            vectorized_modified = self._vector.transform([modified_text])
+        censored_text = text  # Start with the original text
 
-            # Check original text classification
-            original_classification = self._model.predict(self._vector.transform([text]))[0]
+        # Tokenize text into potential words (spaces and non-spaces included)
+        tokens = re.findall(r'\b\w+\b', text)  # Finds words while keeping non-word characters separate
 
-            # Check modified text classification
-            modified_classification = self._model.predict(vectorized_modified)[0]
+        for token in tokens:
+            # Skip whitelisted words
+            if token.lower() in whitelist:
+                continue
 
-            # If removing the word changes the classification, replace with *
-            if modified_classification != original_classification:
-                censored_words.append('*' * len(word))
-            else:
-                censored_words.append(word)
+            # Check if the token contains potential profane words
+            for i in range(len(token)):
+                for j in range(i + 1, len(token) + 1):
+                    substring = token[i:j]
 
-        # Reconstruct the sentence
-        return ' '.join(censored_words)
+                    # Vectorize the substring
+                    substring_vectorized = self._vector.transform([substring])
+
+                    # Predict if the substring is profane
+                    substring_classification = self._model.predict(substring_vectorized)[0]
+
+                    # If the substring is profane, censor it in the original text
+                    if substring_classification == 1:  # Assuming 1 indicates a profane word
+                        censored_text = censored_text.replace(substring, '*' * len(substring))
+
+        return censored_text

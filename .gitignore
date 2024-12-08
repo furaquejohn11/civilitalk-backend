@@ -1,2 +1,5 @@
 model_none_30k.pkl
 vectorizer_30k.pkl
+
+model_none_50k_different_vectorizer_contractions.pkl
+vectorizer_50k_different_vectorizer_contractions.pkl

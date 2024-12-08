@@ -1,0 +1,6 @@
+sqlmodel==0.0.22
+bcrypt==4.2.1
+fastapi==0.115.5
+pydantic==2.10.2
+joblib==1.4.2
+scikit-learn==1.5.2

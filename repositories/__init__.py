@@ -2,3 +2,4 @@ from .conversation_repository import ConversationRepository as ConversationRepos
 from .inbox_repository import InboxRepository as InboxRepository
 from .ml_repository import MLRepository as MLRepository
 from .user_repository import UserRepository as UserRepository
+from .chatguard_repository import ChatguardRepository as ChatguardRepository

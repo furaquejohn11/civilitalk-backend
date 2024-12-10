@@ -2,7 +2,6 @@ from sqlmodel import Session, select, col
 from schemas.conversation_schema import ConversationCreate
 from models import Conversation
 from .ml_repository import MLRepository
-from fastapi import FastAPI, WebSocket
 
 
 class ConversationRepository:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
+from datetime import datetime
 
 
 class InboxCreate(BaseModel):
@@ -21,5 +21,3 @@ class InboxRead(BaseModel):
     created_by: int
     received_by: int
     has_chatguard: bool
-
-

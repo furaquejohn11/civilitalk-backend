@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Session
 
 from repositories import ConversationRepository
-from routers import user_router, inbox_router, conversation_router
+from routers import user_router, inbox_router, conversation_router, chatguard_router
 from db.db import create_db_and_tables, get_session
 from schemas.conversation_schema import ConversationCreate
 from utils.websocket_manager import ConnectionManager
@@ -77,7 +77,7 @@ async def websocket_endpoint(websocket: WebSocket, session: Session = Depends(ge
 app.include_router(user_router, prefix="/api/user", tags=['User'])
 app.include_router(inbox_router, prefix="/api/inbox", tags=['Inbox'])
 app.include_router(conversation_router, prefix="/api/conversation", tags=['Conversation'])
-
+app.include_router(chatguard_router, prefix="/api/chatguard", tags=['Chatguard'])
 
 
 

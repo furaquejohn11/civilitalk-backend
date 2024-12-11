@@ -13,7 +13,8 @@ class ConversationRepository:
 
     def create_conversation(self, conversation_data: ConversationCreate) -> Conversation:
         # Conditionally apply chat guard filtering
-        if conversation_data.has_chatguard:
+        # O indicates the id of the chatguard
+        if conversation_data.has_chatguard and conversation_data.sender_id != 0:
             conversation_data.text = self._ml_repository.censor_profane_words(
                 conversation_data.text
             )
@@ -39,7 +40,7 @@ class ConversationRepository:
 
         return conversations
 
-    def read_conversation(self, inbox_id: int, page: int, page_size: int = 10) -> list[Conversation]:
+    def read_conversation(self, inbox_id: int, page: int, page_size: int = 20) -> list[Conversation]:
         offset = (page - 1) * page_size
 
         conversation = (self.session.exec(

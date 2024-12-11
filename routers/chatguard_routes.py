@@ -20,3 +20,10 @@ def disable_chatguard(inbox_id: int, name: str, session: Session = Depends(get_s
     chatguard_repository = ChatguardRepository(session)
     chatguard = chatguard_repository.disable_chatguard(inbox_id, name)
     return chatguard
+
+
+@router.get('/inbox')
+def has_chatguard(inbox_id: int, session: Session = Depends(get_session)):
+    chatguard_repository = ChatguardRepository(session)
+    get_chatguard = chatguard_repository.has_chatguard(inbox_id)
+    return get_chatguard

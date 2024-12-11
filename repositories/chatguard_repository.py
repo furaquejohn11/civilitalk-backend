@@ -1,4 +1,4 @@
-from sqlmodel import Session, select
+from sqlmodel import Session, select, update
 from models import Inbox
 from schemas.conversation_schema import ConversationCreate
 
@@ -11,8 +11,9 @@ class ChatguardRepository:
     def enable_chatguard(self, inbox_id: int, name: str) -> ConversationCreate:
         check_chatguard = self.has_chatguard(inbox_id)
         txt: str
-        if check_chatguard:
+        if not check_chatguard:
             txt = f'Chatguard has been enabled by {name}. All profanity messages will be filtered.'
+            self.chatguard_helper(inbox_id, True)
         else:
             txt = f'Chatguard is already enable. All profanity messages will be filtered.'
         prompt = ConversationCreate(
@@ -26,8 +27,9 @@ class ChatguardRepository:
     def disable_chatguard(self, inbox_id: int, name: str):
         check_chatguard = self.has_chatguard(inbox_id)
         txt: str
-        if not check_chatguard:
+        if check_chatguard:
             txt = f'Chatguard has been disabled by {name}. All profanity messages will not be filtered.'
+            self.chatguard_helper(inbox_id, False)
         else:
             txt = f'Chatguard is already disabled. All profanity messages will not be filtered.'
         prompt = ConversationCreate(
@@ -44,7 +46,14 @@ class ChatguardRepository:
         chatguard = self.session.exec(
             select(Inbox.has_chatguard)
             .where(Inbox.id == inbox_id)
-        )
-        return bool(chatguard)
+        ).first()
+        return chatguard
 
-    # def send_prompt(self, prompt_data: ConversationCreate):
+    def chatguard_helper(self, inbox_id: int, value: bool):
+        self.session.exec(
+            update(Inbox)
+            .where(Inbox.id == inbox_id)
+            .values(has_chatguard=value)
+        )
+        self.session.commit()
+

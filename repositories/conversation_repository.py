@@ -1,3 +1,5 @@
+from typing import Optional, List
+
 from sqlmodel import Session, select, col
 from schemas.conversation_schema import ConversationCreate
 from models import Conversation
@@ -5,13 +7,14 @@ from .ml_repository import MLRepository
 
 
 class ConversationRepository:
-    def __init__(self, session: Session):
+    def __init__(self, session: Session, ml_repository: Optional[MLRepository] = None):
         self.session = session
+        self._ml_repository = ml_repository or MLRepository()
 
     def create_conversation(self, conversation_data: ConversationCreate) -> Conversation:
+        # Conditionally apply chat guard filtering
         if conversation_data.has_chatguard:
-            ml_repository = MLRepository()
-            conversation_data.text = ml_repository.censor_profane_words(
+            conversation_data.text = self._ml_repository.censor_profane_words(
                 conversation_data.text
             )
 
@@ -27,6 +30,15 @@ class ConversationRepository:
 
         return conversation
 
+    def batch_create_conversations(self, conversations_data: List[ConversationCreate]) -> List[Conversation]:
+        conversations = []
+
+        for conversation_data in conversations_data:
+            conversation = self.create_conversation(conversation_data)
+            conversations.append(conversation)
+
+        return conversations
+
     def read_conversation(self, inbox_id: int, page: int, page_size: int = 10) -> list[Conversation]:
         offset = (page - 1) * page_size
 
@@ -36,7 +48,7 @@ class ConversationRepository:
             .offset(offset)
             .limit(page_size)
             .order_by(col(Conversation.created_at).desc())
-            ).all())
+        ).all())
 
         return list(reversed(conversation))
 

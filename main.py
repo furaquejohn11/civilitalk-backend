@@ -6,7 +6,7 @@ from repositories import ConversationRepository
 from routers import user_router, inbox_router, conversation_router, chatguard_router
 from db.db import create_db_and_tables, get_session
 from schemas.conversation_schema import ConversationCreate
-from utils.websocket_manager import ConnectionManager
+from utils.connection_manager import ConnectionManager
 from repositories import MLRepository  # Assuming you've created this import
 
 app = FastAPI()
@@ -48,9 +48,10 @@ ml_repository = MLRepository()
 @app.websocket("/ws/chat")
 async def websocket_endpoint(
         websocket: WebSocket,
+        inbox_id: int,
         session: Session = Depends(get_session)
 ):
-    await manager.connect(websocket)
+    await manager.connect(websocket, inbox_id)
     try:
         while True:
             # Receive message from client
@@ -71,13 +72,11 @@ async def websocket_endpoint(
                     has_chatguard=data.get("has_chatguard", False)
                 )
             except KeyError as e:
-                # Handle missing required fields
                 await websocket.send_json({
                     "error": f"Missing required field: {str(e)}"
                 })
                 continue
             except ValueError as e:
-                # Handle validation errors
                 await websocket.send_json({
                     "error": str(e)
                 })
@@ -87,14 +86,13 @@ async def websocket_endpoint(
             try:
                 conversation = conversation_repository.create_conversation(conversation_data)
             except Exception as e:
-                # Log the error and send error response
                 print(f"Conversation creation error: {e}")
                 await websocket.send_json({
                     "error": "Failed to create conversation"
                 })
                 continue
 
-            # Broadcast the message to all connected clients
+            # Broadcast the message only to the specific inbox
             broadcast_data = {
                 "id": conversation.id,
                 "inbox_id": conversation.inbox_id,
@@ -103,12 +101,11 @@ async def websocket_endpoint(
                 "created_at": conversation.created_at.isoformat()
             }
 
-            await manager.broadcast(broadcast_data)
+            await manager.broadcast(inbox_id, broadcast_data)
 
     except WebSocketDisconnect:
-        manager.disconnect(websocket)
+        manager.disconnect(websocket, inbox_id)
     except Exception as e:
-        # Catch-all for unexpected errors
         print(f"Unexpected WebSocket error: {e}")
         await websocket.close()
 

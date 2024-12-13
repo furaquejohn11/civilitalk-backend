@@ -1,5 +1,5 @@
 from fastapi import HTTPException, status
-from sqlmodel import Session, select, or_
+from sqlmodel import Session, select, or_, text
 from schemas.inbox_schema import InboxCreate, InboxPreview
 from models import Inbox
 from .conversation_repository import ConversationRepository
@@ -24,6 +24,23 @@ class InboxRepository:
         ).first()
 
         return bool(inbox)
+
+    def get_inbox_id(self, created_by: int, received_by: int) -> dict:
+        # Raw SQL query to check if an inbox exists
+        query = text("""
+            SELECT id FROM inbox 
+            WHERE (created_by = :created_by AND received_by = :received_by)
+            OR (created_by = :received_by AND received_by = :created_by)
+        """)
+
+        # Execute the query with parameters
+        result = self.session.execute(query, {"created_by": created_by, "received_by": received_by}).fetchone()
+
+        # Check if an inbox was found
+        return {
+            "exists": result is not None,
+            "inbox_id": result.id if result else None
+        }
 
     def create_inbox(self, inbox_data: InboxCreate) -> Inbox:
         # Check if there is an existing inbox between 2 users
@@ -54,7 +71,7 @@ class InboxRepository:
                     Inbox.created_by == user_id,
                     Inbox.received_by == user_id)
             )
-            ).all()
+        ).all()
 
         return list(inbox)
 
@@ -80,4 +97,3 @@ class InboxRepository:
             preview_list.append(preview)
 
         return preview_list
-

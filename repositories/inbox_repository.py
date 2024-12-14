@@ -10,22 +10,7 @@ class InboxRepository:
     def __init__(self, session: Session):
         self.session = session
 
-    def has_existing_inbox(self, sender_id: int, receiver_id: int) -> bool:
-        inbox = self.session.exec(
-            select(Inbox)
-            .where(
-                or_(
-                    (Inbox.created_by == sender_id and
-                     Inbox.received_by == receiver_id),
-                    (Inbox.created_by == receiver_id and
-                     Inbox.received_by == sender_id)
-                )
-            )
-        ).first()
-
-        return bool(inbox)
-
-    def get_inbox_id(self, created_by: int, received_by: int) -> dict:
+    def get_inbox(self, created_by: int, received_by: int) -> dict:
         # Raw SQL query to check if an inbox exists
         query = text("""
             SELECT id FROM inbox 
@@ -44,8 +29,8 @@ class InboxRepository:
 
     def create_inbox(self, inbox_data: InboxCreate) -> Inbox:
         # Check if there is an existing inbox between 2 users
-        if self.has_existing_inbox(inbox_data.created_by,
-                                   inbox_data.received_by):
+        has_existing_inbox = self.get_inbox(inbox_data.created_by, inbox_data.received_by)
+        if has_existing_inbox["exists"]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Inbox already exist"

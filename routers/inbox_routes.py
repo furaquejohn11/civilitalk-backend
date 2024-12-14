@@ -19,7 +19,7 @@ def create_inbox(inbox_data: InboxCreate, session: Session = Depends(get_session
 @router.get('/validate')
 def has_inbox(sender_id: int, receiver_id: int, session: Session = Depends(get_session)):
     inbox_repository = InboxRepository(session)
-    has_existing_inbox = inbox_repository.get_inbox_id(sender_id, receiver_id)
+    has_existing_inbox = inbox_repository.get_inbox(sender_id, receiver_id)
     return has_existing_inbox
 
 

@@ -3,3 +3,6 @@ vectorizer_30k.pkl
 
 model_none_50k_different_vectorizer_contractions.pkl
 vectorizer_50k_different_vectorizer_contractions.pkl
+
+profanity_filter_model_rnn.keras
+tokenizer.pkl

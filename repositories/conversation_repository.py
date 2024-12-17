@@ -15,7 +15,7 @@ class ConversationRepository:
         # Conditionally apply chat guard filtering
         # O indicates the id of the chatguard
         if conversation_data.has_chatguard and conversation_data.sender_id != 0:
-            conversation_data.text = self._ml_repository.censor_profane_words(
+            conversation_data.text = self._ml_repository.censor_profane_rnn(
                 conversation_data.text
             )
 

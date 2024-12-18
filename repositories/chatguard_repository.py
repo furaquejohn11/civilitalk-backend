@@ -135,7 +135,7 @@ class ChatguardRepository:
                At your first start, chatguard is initially disabled and its default model is Random Forest\n
                Chatguard Commands:\n
                /chatguard-on     : To enable chatguard profanity filter\n
-               /chatguard-on     : To disable chatguard profanity filter\n
+               /chatguard-off     : To disable chatguard profanity filter\n
                /chatguard-rnn    : To switch into RNN model\n
                /chatguard-rf     : To switch into Random Forest model\n
                /chatguard-status : To view status of activation and model\n

@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from sqlmodel import Session, select, col
 from schemas.conversation_schema import ConversationCreate
-from models import Conversation
+from models import Conversation, BotModel, Inbox
 from .ml_repository import MLRepository
 
 
@@ -11,13 +11,20 @@ class ConversationRepository:
         self.session = session
         self._ml_repository = ml_repository or MLRepository()
 
+    def get_chatguard_model(self, inbox_id: int) -> BotModel:
+        chatguard_model = self.session.exec(
+            select(Inbox.bot_model)
+            .where(Inbox.id == inbox_id)
+        ).first()
+        return chatguard_model
+
     def create_conversation(self, conversation_data: ConversationCreate) -> Conversation:
         # Conditionally apply chat guard filtering
         # O indicates the id of the chatguard
         if conversation_data.has_chatguard and conversation_data.sender_id != 0:
-            conversation_data.text = self._ml_repository.censor_profane_rnn(
-                conversation_data.text
-            )
+            bot_model = self.get_chatguard_model(conversation_data.inbox_id)
+            txt = conversation_data.text
+            conversation_data.text = self.profane_text(bot_model, txt)
 
         conversation = Conversation(
             inbox_id=conversation_data.inbox_id,
@@ -30,6 +37,14 @@ class ConversationRepository:
         self.session.refresh(conversation)
 
         return conversation
+
+    def profane_text(self, bot_model, txt) -> str:
+        if bot_model == BotModel.RNN:
+            return self._ml_repository.censor_profane_rnn(txt)
+        elif bot_model == BotModel.RANDOM_FOREST:
+            return self._ml_repository.censor_profane_words(txt)
+
+        return "Invalid Profanity"
 
     def batch_create_conversations(self, conversations_data: List[ConversationCreate]) -> List[Conversation]:
         conversations = []

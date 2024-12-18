@@ -12,10 +12,10 @@ class ChatguardRepository:
         check_chatguard = self.has_chatguard(inbox_id)
         txt: str
         if not check_chatguard:
-            txt = f'Chatguard has been enabled by {name}. All profanity messages will be filtered.'
+            txt = f'Chatguard has been enabled by {name}. \nAll profanity messages will be filtered.'
             self.chatguard_helper(inbox_id, True)
         else:
-            txt = f'Chatguard is already enable. All profanity messages will be filtered.'
+            txt = f'Chatguard is already enable. \nAll profanity messages will be filtered.'
         prompt = ConversationCreate(
             inbox_id=inbox_id,
             sender_id=0,
@@ -28,10 +28,10 @@ class ChatguardRepository:
         check_chatguard = self.has_chatguard(inbox_id)
         txt: str
         if check_chatguard:
-            txt = f'Chatguard has been disabled by {name}. All profanity messages will not be filtered.'
+            txt = f'Chatguard has been disabled by {name}. \nAll profanity messages will not be filtered.'
             self.chatguard_helper(inbox_id, False)
         else:
-            txt = f'Chatguard is already disabled. All profanity messages will not be filtered.'
+            txt = f'Chatguard is already disabled. \nAll profanity messages will not be filtered.'
         prompt = ConversationCreate(
             inbox_id=inbox_id,
             sender_id=0,

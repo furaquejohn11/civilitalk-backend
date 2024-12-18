@@ -16,6 +16,21 @@ class MLRepository:
         substring_vectorized = self._vector.transform([substring])
         return self._model.predict(substring_vectorized)[0]
 
+    @lru_cache(maxsize=2000)
+    def _predict_rnn_word(self, word: str, threshold: float = 0.5) -> bool:
+        """
+        Cached method to predict profanity for a single word using RNN.
+        Returns True if the word is predicted as profane, False otherwise.
+        """
+        # Convert word to sequence
+        word_sequence = self._tokenizer.texts_to_sequences([word])
+        word_padded = tf.keras.preprocessing.sequence.pad_sequences(
+            word_sequence, maxlen=100, padding='post', truncating='post')
+
+        # Predict profanity
+        word_prediction = self._rnn_model.predict(word_padded)[0][0]
+        return word_prediction > threshold
+
     def _generate_substrings(self, token):
         for length in range(len(token), 1, -1):
             for start in range(len(token) - length + 1):
@@ -49,6 +64,7 @@ class MLRepository:
         return censored_text
 
     def censor_profane_rnn(self, text: str, threshold=0.5):
+        # Check if the entire text is profane first
         sequence = self._tokenizer.texts_to_sequences([text])
         padded = tf.keras.preprocessing.sequence.pad_sequences(sequence, maxlen=100, padding='post', truncating='post')
 
@@ -60,13 +76,8 @@ class MLRepository:
             words = text.split()  # Split text into words
             masked_words = []
             for word in words:
-                # Check each word's profanity likelihood individually
-                word_sequence = self._tokenizer.texts_to_sequences([word])
-                word_padded = tf.keras.preprocessing.sequence.pad_sequences(
-                                            word_sequence, maxlen=100, padding='post',
-                                            truncating='post')
-                word_prediction = self._rnn_model.predict(word_padded)[0][0]
-                if word_prediction > threshold:
+                # Use the cached prediction method for each word
+                if self._predict_rnn_word(word, threshold):
                     # Mask the word
                     masked_words.append(f"{word[0]}{'*' * (len(word) - 1)}")
                 else:
